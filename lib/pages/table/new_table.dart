@@ -2,7 +2,7 @@
  * @Author: DonJuaning
  * @Date: 2024-05-07 15:22:17
  * @LastEditors: DonJuaning
- * @LastEditTime: 2024-05-07 21:51:41
+ * @LastEditTime: 2024-05-16 17:25:27
  * @FilePath: /mysqldb/lib/pages/table/new_table.dart
  * @Description: 
  */
@@ -18,16 +18,16 @@ class Employee {
   Employee(this.id, this.name, this.designation, this.salary);
 
   /// Id of an employee.
-  final int id;
+  int id;
 
   /// Name of an employee.
-  final String name;
+  String name;
 
   /// Designation of an employee.
-  final String designation;
+  String designation;
 
   /// Salary of an employee.
-  final int salary;
+  int salary;
 }
 
 class NewTable extends StatefulWidget {
@@ -39,7 +39,6 @@ class NewTable extends StatefulWidget {
 }
 
 class _NewTableState extends State<NewTable> {
-  List<Employee> employees = <Employee>[];
   late EmployeeDataSource _employeeDataSource;
 
   @override
@@ -97,21 +96,22 @@ class _NewTableState extends State<NewTable> {
                   ))),
         ]));
   }
+}
 
-  List<Employee> getEmployeeData() {
-    return [
-      Employee(10001, 'James', 'Project Lead', 20000),
-      Employee(10002, 'Kathryn', 'Manager', 30000),
-      Employee(10003, 'Lara', 'Developer', 15000),
-      Employee(10004, 'Michael', 'Designer', 15000),
-      Employee(10005, 'Martin', 'Developer', 15000),
-      Employee(10006, 'Newberry', 'Developer', 15000),
-      Employee(10007, 'Balnc', 'Developer', 15000),
-      Employee(10008, 'Perry', 'Developer', 15000),
-      Employee(10009, 'Gable', 'Developer', 15000),
-      Employee(10010, 'Grimes', 'Developer', 15000)
-    ];
-  }
+List<Employee> employees = <Employee>[];
+List<Employee> getEmployeeData() {
+  return [
+    Employee(10001, 'James', 'Project Lead', 20000),
+    Employee(10002, 'Kathryn', 'Manager', 30000),
+    Employee(10003, 'Lara', 'Developer', 15000),
+    Employee(10004, 'Michael', 'Designer', 15000),
+    Employee(10005, 'Martin', 'Developer', 15000),
+    Employee(10006, 'Newberry', 'Developer', 15000),
+    Employee(10007, 'Balnc', 'Developer', 15000),
+    Employee(10008, 'Perry', 'Developer', 15000),
+    Employee(10009, 'Gable', 'Developer', 15000),
+    Employee(10010, 'Grimes', 'Developer', 15000)
+  ];
 }
 
 class EmployeeDataSource extends DataGridSource {
@@ -165,7 +165,6 @@ class EmployeeDataSource extends DataGridSource {
     // The new cell value must be reset.
     // To avoid committing the [DataGridCell] value that was previously edited
     // into the current non-modified [DataGridCell].
-    var newCellValue = null;
 
     final bool isNumericType =
         column.columnName == 'id' || column.columnName == 'salary';
@@ -200,5 +199,40 @@ class EmployeeDataSource extends DataGridSource {
         },
       ),
     );
+  }
+
+  @override
+  void onCellSubmit(DataGridRow dataGridRow, RowColumnIndex rowColumnIndex,
+      GridColumn column) {
+    final dynamic oldValue = dataGridRow
+            .getCells()
+            .firstWhere((DataGridCell dataGridCell) =>
+                dataGridCell.columnName == column.columnName)
+            .value ??
+        '';
+
+    final int dataRowIndex = _employeeData.indexOf(dataGridRow);
+
+    if (newCellValue == null || oldValue == newCellValue) {
+      return;
+    }
+
+    if (column.columnName == 'id') {
+      _employeeData[dataRowIndex].getCells()[rowColumnIndex.columnIndex] =
+          DataGridCell<int>(columnName: 'id', value: newCellValue);
+      employees[dataRowIndex].id = newCellValue as int;
+    } else if (column.columnName == 'name') {
+      _employeeData[dataRowIndex].getCells()[rowColumnIndex.columnIndex] =
+          DataGridCell<String>(columnName: 'name', value: newCellValue);
+      employees[dataRowIndex].name = newCellValue.toString();
+    } else if (column.columnName == 'designation') {
+      _employeeData[dataRowIndex].getCells()[rowColumnIndex.columnIndex] =
+          DataGridCell<String>(columnName: 'designation', value: newCellValue);
+      employees[dataRowIndex].designation = newCellValue.toString();
+    } else {
+      _employeeData[dataRowIndex].getCells()[rowColumnIndex.columnIndex] =
+          DataGridCell<int>(columnName: 'salary', value: newCellValue);
+      employees[dataRowIndex].salary = newCellValue as int;
+    }
   }
 }
