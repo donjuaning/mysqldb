@@ -2,7 +2,7 @@
  * @Author: DonJuaning
  * @Date: 2024-05-07 15:22:17
  * @LastEditors: DonJuaning
- * @LastEditTime: 2024-05-16 17:25:27
+ * @LastEditTime: 2024-05-17 17:47:20
  * @FilePath: /mysqldb/lib/pages/table/new_table.dart
  * @Description: 
  */
@@ -13,21 +13,15 @@ import 'package:mysqldb/tool/sizeFit.dart';
 import 'package:mysql1/mysql1.dart';
 import 'package:mysqldb/tool/common.dart';
 
-class Employee {
-  /// Creates the employee class with required details.
-  Employee(this.id, this.name, this.designation, this.salary);
+class db_table {
+  /// Creates the db_table class with required details.
+  db_table(this.column, this.dataType);
 
-  /// Id of an employee.
-  int id;
+  /// Name of an db_table.
+  String column;
 
-  /// Name of an employee.
-  String name;
-
-  /// Designation of an employee.
-  String designation;
-
-  /// Salary of an employee.
-  int salary;
+  /// Designation of an db_table.
+  String dataType;
 }
 
 class NewTable extends StatefulWidget {
@@ -39,104 +33,147 @@ class NewTable extends StatefulWidget {
 }
 
 class _NewTableState extends State<NewTable> {
-  late EmployeeDataSource _employeeDataSource;
+  late db_tableDataSource _db_tableDataSource;
+  TextEditingController _nameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    employees = getEmployeeData();
-    _employeeDataSource = EmployeeDataSource(employeeData: employees);
+    db_tables = getdb_tableData();
+    _db_tableDataSource = db_tableDataSource(db_tableData: db_tables);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: SfDataGrid(
-            source: _employeeDataSource,
-            allowEditing: true,
-            selectionMode: SelectionMode.single,
-            navigationMode: GridNavigationMode.cell,
-            editingGestureType: EditingGestureType.tap,
-            columns: [
-          GridColumn(
-              columnName: 'id',
-              label: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    'ID',
-                    overflow: TextOverflow.ellipsis,
-                  ))),
-          GridColumn(
-              columnName: 'name',
-              label: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Name',
-                    overflow: TextOverflow.ellipsis,
-                  ))),
-          GridColumn(
-              columnName: 'designation',
-              label: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Designation',
-                    overflow: TextOverflow.ellipsis,
-                  ))),
-          GridColumn(
-              columnName: 'salary',
-              label: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    'Salary',
-                    overflow: TextOverflow.ellipsis,
-                  ))),
-        ]));
+        appBar: AppBar(
+          // Here we take the value from the MyHomePage object that was created by
+          // the App.build method, and use it to set our appbar title.
+          title: Text("新建表格"),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _save,
+          tooltip: 'Increment',
+          child: const Icon(Icons.save),
+        ),
+        body: Column(
+          children: [
+            Row(children: [
+              Expanded(
+                child: ClipRRect(
+                  child: Container(
+                    child: TextField(
+                      autofocus: false,
+                      controller: _nameController, //设置controller
+                      maxLines: 1,
+                      textAlign: TextAlign.left,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: const InputDecoration(
+                        hintText: '输入表名',
+                        contentPadding: EdgeInsets.all(10),
+                      ),
+                    ),
+                    color: Colors.white,
+                    height: 56.rpx,
+                    alignment: Alignment.center,
+                  ),
+                  borderRadius: BorderRadius.circular(12.rpx),
+                ),
+              ),
+            ]),
+            SfDataGrid(
+                source: _db_tableDataSource,
+                allowEditing: true,
+                selectionMode: SelectionMode.single,
+                navigationMode: GridNavigationMode.cell,
+                editingGestureType: EditingGestureType.doubleTap,
+                footerFrozenRowsCount: 1,
+                footer: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    alignment: Alignment.centerRight,
+                    color: Colors.grey[400],
+                    child: Center(
+                        child: TextButton(
+                            child: const Text('新增属性'), onPressed: addRow))),
+                columns: [
+                  GridColumn(
+                      columnName: 'column',
+                      label: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            'column',
+                            overflow: TextOverflow.ellipsis,
+                          ))),
+                  GridColumn(
+                      columnName: 'dataType',
+                      label: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'dataType',
+                            overflow: TextOverflow.ellipsis,
+                          ))),
+                ]),
+          ],
+        ));
+  }
+
+  void _save() async {
+    List<String> mySetting = widget.setting.split(":");
+    print(db_tables);
+    var sql_string =
+        "CREATE TABLE `${mySetting[4]}`.`${_nameController.text}` (";
+    for (var i = 0; i < db_tables.length; i++) {
+      sql_string += "`${db_tables[i].column}` ${db_tables[i].dataType} NULL,";
+    }
+    sql_string = sql_string.substring(0, sql_string.length - 1);
+    sql_string += ");";
+    print(sql_string);
+    var settings = ConnectionSettings(
+        host: mySetting[0],
+        port: int.parse(mySetting[1]),
+        user: mySetting[2],
+        password: mySetting[3],
+        db: mySetting[4]);
+    var conn = await MySqlConnection.connect(settings);
+    await conn.query(sql_string);
+    Navigator.of(context).pop();
+  }
+
+  void addRow() {
+    db_tables.add(db_table('new_column', 'VARCHAR(655)'));
+    _db_tableDataSource.buildDataGridRows(db_tables);
+    _db_tableDataSource.updateDataGridSource();
   }
 }
 
-List<Employee> employees = <Employee>[];
-List<Employee> getEmployeeData() {
+List<db_table> db_tables = <db_table>[];
+List<db_table> getdb_tableData() {
   return [
-    Employee(10001, 'James', 'Project Lead', 20000),
-    Employee(10002, 'Kathryn', 'Manager', 30000),
-    Employee(10003, 'Lara', 'Developer', 15000),
-    Employee(10004, 'Michael', 'Designer', 15000),
-    Employee(10005, 'Martin', 'Developer', 15000),
-    Employee(10006, 'Newberry', 'Developer', 15000),
-    Employee(10007, 'Balnc', 'Developer', 15000),
-    Employee(10008, 'Perry', 'Developer', 15000),
-    Employee(10009, 'Gable', 'Developer', 15000),
-    Employee(10010, 'Grimes', 'Developer', 15000)
+    db_table(
+      'new_column',
+      'VARCHAR(655)',
+    ),
+    db_table('time_stamp', 'DOUBLE'),
   ];
 }
 
-class EmployeeDataSource extends DataGridSource {
+class db_tableDataSource extends DataGridSource {
   dynamic newCellValue;
 
   /// Helps to control the editable text in the [TextField] widget.
   TextEditingController editingController = TextEditingController();
 
-  /// Creates the employee data source class with required details.
-  EmployeeDataSource({required List<Employee> employeeData}) {
-    _employeeData = employeeData
-        .map<DataGridRow>((e) => DataGridRow(cells: [
-              DataGridCell<int>(columnName: 'id', value: e.id),
-              DataGridCell<String>(columnName: 'name', value: e.name),
-              DataGridCell<String>(
-                  columnName: 'designation', value: e.designation),
-              DataGridCell<int>(columnName: 'salary', value: e.salary),
-            ]))
-        .toList();
+  /// Creates the db_table data source class with required details.
+  db_tableDataSource({required List<db_table> db_tableData}) {
+    buildDataGridRows(db_tableData);
   }
 
-  List<DataGridRow> _employeeData = [];
+  List<DataGridRow> _db_tableData = [];
 
   @override
-  List<DataGridRow> get rows => _employeeData;
+  List<DataGridRow> get rows => _db_tableData;
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
@@ -211,28 +248,33 @@ class EmployeeDataSource extends DataGridSource {
             .value ??
         '';
 
-    final int dataRowIndex = _employeeData.indexOf(dataGridRow);
+    final int dataRowIndex = _db_tableData.indexOf(dataGridRow);
 
     if (newCellValue == null || oldValue == newCellValue) {
       return;
     }
 
-    if (column.columnName == 'id') {
-      _employeeData[dataRowIndex].getCells()[rowColumnIndex.columnIndex] =
-          DataGridCell<int>(columnName: 'id', value: newCellValue);
-      employees[dataRowIndex].id = newCellValue as int;
-    } else if (column.columnName == 'name') {
-      _employeeData[dataRowIndex].getCells()[rowColumnIndex.columnIndex] =
-          DataGridCell<String>(columnName: 'name', value: newCellValue);
-      employees[dataRowIndex].name = newCellValue.toString();
-    } else if (column.columnName == 'designation') {
-      _employeeData[dataRowIndex].getCells()[rowColumnIndex.columnIndex] =
-          DataGridCell<String>(columnName: 'designation', value: newCellValue);
-      employees[dataRowIndex].designation = newCellValue.toString();
-    } else {
-      _employeeData[dataRowIndex].getCells()[rowColumnIndex.columnIndex] =
-          DataGridCell<int>(columnName: 'salary', value: newCellValue);
-      employees[dataRowIndex].salary = newCellValue as int;
+    if (column.columnName == 'column') {
+      _db_tableData[dataRowIndex].getCells()[rowColumnIndex.columnIndex] =
+          DataGridCell<String>(columnName: 'column', value: newCellValue);
+      db_tables[dataRowIndex].column = newCellValue.toString();
+    } else if (column.columnName == 'dataType') {
+      _db_tableData[dataRowIndex].getCells()[rowColumnIndex.columnIndex] =
+          DataGridCell<String>(columnName: 'dataType', value: newCellValue);
+      db_tables[dataRowIndex].dataType = newCellValue.toString();
     }
+  }
+
+  void updateDataGridSource() {
+    notifyListeners();
+  }
+
+  void buildDataGridRows(List<db_table> db_tableData) {
+    _db_tableData = db_tableData
+        .map<DataGridRow>((e) => DataGridRow(cells: [
+              DataGridCell<String>(columnName: 'column', value: e.column),
+              DataGridCell<String>(columnName: 'dataType', value: e.dataType),
+            ]))
+        .toList();
   }
 }
