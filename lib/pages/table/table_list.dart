@@ -2,7 +2,7 @@
  * @Author: DonJuaning
  * @Date: 2024-05-07 11:01:29
  * @LastEditors: DonJuaning
- * @LastEditTime: 2024-05-17 17:48:29
+ * @LastEditTime: 2024-05-18 17:09:40
  * @FilePath: /mysqldb/lib/pages/table/table_list.dart
  * @Description: 
  */
@@ -11,6 +11,7 @@ import 'package:mysqldb/tool/sizeFit.dart';
 import 'package:mysql1/mysql1.dart';
 import 'package:mysqldb/tool/common.dart';
 import 'package:mysqldb/pages/table/new_table.dart';
+import 'package:mysqldb/pages/table/table_view.dart';
 
 class TableList extends StatefulWidget {
   const TableList({Key? key, required this.setting}) : super(key: key);
@@ -84,6 +85,17 @@ class _TableListState extends State<TableList> {
     ).then((value) => refresh());
   }
 
+  void _into_table(setting, tableName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => TableView(
+                setting: setting,
+                title: tableName,
+              )),
+    ).then((value) => refresh());
+  }
+
   Widget buildListView(BuildContext context) {
     return ListView(
       shrinkWrap: true,
@@ -100,7 +112,9 @@ class _TableListState extends State<TableList> {
           child: Text(
             tableName,
           ),
-          onPressed: () {},
+          onPressed: () {
+            _into_table(widget.setting, tableName);
+          },
         ));
   }
 
@@ -115,7 +129,6 @@ class _TableListState extends State<TableList> {
         db: mySetting[4]);
     var conn = await MySqlConnection.connect(settings);
     var results = await conn.query('show tables;');
-    print(results);
     List tableList = results.toList();
     itemList.clear();
     for (var i = 0; i < tableList.length; i++) {

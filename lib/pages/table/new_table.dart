@@ -2,7 +2,7 @@
  * @Author: DonJuaning
  * @Date: 2024-05-07 15:22:17
  * @LastEditors: DonJuaning
- * @LastEditTime: 2024-05-17 17:47:20
+ * @LastEditTime: 2024-05-21 17:08:25
  * @FilePath: /mysqldb/lib/pages/table/new_table.dart
  * @Description: 
  */
@@ -125,10 +125,10 @@ class _NewTableState extends State<NewTable> {
     var sql_string =
         "CREATE TABLE `${mySetting[4]}`.`${_nameController.text}` (";
     for (var i = 0; i < db_tables.length; i++) {
-      sql_string += "`${db_tables[i].column}` ${db_tables[i].dataType} NULL,";
+      sql_string +=
+          "`${db_tables[i].column}` ${db_tables[i].dataType} NOT NULL,";
     }
-    sql_string = sql_string.substring(0, sql_string.length - 1);
-    sql_string += ");";
+    sql_string += "PRIMARY KEY (`id`));";
     print(sql_string);
     var settings = ConnectionSettings(
         host: mySetting[0],
@@ -152,8 +152,8 @@ List<db_table> db_tables = <db_table>[];
 List<db_table> getdb_tableData() {
   return [
     db_table(
-      'new_column',
-      'VARCHAR(655)',
+      'id',
+      'varchar(655)',
     ),
     db_table('time_stamp', 'DOUBLE'),
   ];
@@ -203,8 +203,7 @@ class db_tableDataSource extends DataGridSource {
     // To avoid committing the [DataGridCell] value that was previously edited
     // into the current non-modified [DataGridCell].
 
-    final bool isNumericType =
-        column.columnName == 'id' || column.columnName == 'salary';
+    final bool isNumericType = false;
 
     return Container(
       padding: const EdgeInsets.all(8.0),
